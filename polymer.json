@@ -1,0 +1,10 @@
+{
+  "entrypoint": "index.html",
+  "shell": "src/shoppinglist-app.html",
+  "fragments": [
+    "src/view-login.html",
+    "src/view-shoppinglists.html",
+    "src/view-products.html",
+    "src/view-productgroups.html"
+  ]
+}

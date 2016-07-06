@@ -1,0 +1,335 @@
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-localstorage/iron-localstorage.html">
+
+<link rel="import" href="../bower_components/app-route/app-route.html">
+
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+
+<link rel="import" href="object-list-behaviour.html">
+
+
+
+<dom-module id="view-productgroups">
+
+    <template>
+
+        <style include="iron-flex iron-flex-alignment"></style>
+        <style>
+            :host {
+                display: block;
+                padding: 10px;
+            }
+            .productgroup .name{
+                max-width: 200px;
+            }
+            .product .name{
+                max-width: 200px;
+            }
+            .product .quantity{
+                margin-left: 10px;
+                width: 40px;
+                text-align: right;
+            }
+            .product .unit{
+                width: 30px;
+                margin-left: 3px;
+            }
+            .product .secondquantity{
+                width: 30px;
+                text-align: right;
+            }
+            .product paper-icon-button{
+                width: 40px;
+            }
+            .shoppinglist{
+                padding-bottom: 10px;
+            }
+            .shoppinglist .productgroup{
+                margin-top: 5px;
+            }
+            .shoppinglist .productgroup .quantity{
+                width: 80px;
+                text-align: right;
+            }
+        </style>
+
+
+
+        <app-route route="{{route}}" pattern="/:key" data="{{routeData}}" tail="{{subroute}}"></app-route>
+
+
+
+        <paper-button raised on-tap="newItem">New product group</paper-button>
+
+        <template is="dom-repeat" items="{{_toArray(productgroups)}}" as="productgroup">
+            <paper-material class="productgroup horizontal layout wrap" on-tap="addItemToShoppinglist">
+                <div class="name flex">{{productgroup.val.name}}</div>
+                <paper-icon-button raised icon="create" on-tap="editItem">Edit</paper-icon-button>
+            </paper-material>
+        </template>
+
+
+
+        <paper-dialog id="productgroupDetail" on-iron-overlay-closed="_showList">
+            <paper-dialog-scrollable>
+                <h3>Product group Details</h3>
+
+                <paper-input label="Name" value="{{tempItem.name}}"></paper-input>
+
+                <template is="dom-repeat" items="{{_getProducts(tempItem.*)}}" as="product">
+                    <div class="product horizontal layout center">
+                        <div class="name flex">{{_getObjectListProperty(products,product.key,'name')}}</div>
+                        <div class="quantity"><paper-input label="Quantity" value="{{product.val.quantity}}" no-label-float="true"></paper-input></div>
+                        <div class="unit">{{_getObjectListProperty(products,product.key,'unit')}}</div>
+                        <div class="secondquantity">{{getProductSecondQuantity(products,product.key,product.val.quantity)}}</div>
+                        <div class="unit">{{_getObjectListProperty(products,product.key,'secondunit')}}</div>
+
+                        <paper-icon-button icon="delete" raised on-tap="deleteProduct">Delete</paper-icon-button>
+                    </div>
+                </template>
+
+                <paper-button raised on-tap="addProduct">Add product</paper-button>
+
+                <div class="buttons">
+                    <paper-button dialog-dismiss>Cancel</paper-button>
+                    <paper-button dialog-confirm on-tap="saveItem">Save</paper-button>
+                    <paper-button raised on-tap="deleteItemDialog">Delete</paper-button>
+                </div>
+            </paper-dialog-scrollable>
+        </paper-dialog>
+
+
+
+        <paper-dialog id="deleteItemDialog">
+            <h2>Are you sure?</h2>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Cancel</paper-button>
+                <paper-button dialog-confirm on-tap="deleteItem">Delete</paper-button>
+            </div>
+        </paper-dialog>
+
+
+
+        <paper-dialog id="addProductDialog">
+            <paper-dialog-scrollable>
+                <h3>Add products</h3>
+                <paper-input label="search" no-label-float value="{{productSearch}}"><iron-icon icon="search" suffix></iron-icon></paper-input>
+                <template is="dom-repeat" items="{{_toArray(products)}}" as="product" filter="{{_computeFilter(productSearch)}}" observe="name">
+                    <paper-material class="product horizontal layout wrap" on-tap="addProductToProductgroup">
+                        <div class="name flex">{{product.val.name}}</div>
+                        <div class="store flex">{{product.val.store}}</div>
+                    </paper-material>
+                </template>
+
+                <div class="buttons">
+                    <paper-button dialog-dismiss>Done</paper-button>
+                </div>
+            </paper-dialog-scrollable>
+        </paper-dialog>
+
+
+
+        <paper-dialog id="shoppinglistDialog" class="shoppinglist" vertical-align="top" horizontal-align="right">
+            <h3>Shoppinglist</h3>
+
+            <template is="dom-repeat" items="{{_toArray(shoppinglist.productgroups)}}" as="productgroup">
+                <div class="product horizontal layout">
+                    <div class="flex">{{_getObjectListProperty(productgroups,productgroup.key,'name')}}</div>
+                    <div class="quantity">{{productgroup.val.quantity}}</div>
+                </div>
+            </template>
+
+        </paper-dialog>
+
+
+
+    </template>
+
+    <script>
+
+        Polymer({
+            is: 'view-productgroups',
+            properties:{
+                shoppinglist: {
+                    type: 'Object',
+                    notify: true
+                },
+                products: {
+                    type: 'Object',
+                    notify: true
+                },
+                productgroups: {
+                    type: 'Object',
+                    notify: true
+                },
+                route: {
+                    type: 'string'
+                }
+            },
+
+            observers: [
+                '_routeKeyChanged(routeData.key)',
+                '_productgroupsChanged(productgroups.*)'
+            ],
+
+            newItem: function(){
+                this.set('route.path','/-1');
+            },
+
+            editItem: function(e){
+                e.stopPropagation();
+                var key = e.model.__data__.productgroup.key;
+                this.set('route.path','/'+key);
+            },
+
+            saveItem: function(e){
+                this.set('productgroups.'+this.tempKey,this.tempItem);
+            },
+
+            deleteItemDialog: function(e){
+                e.stopPropagation();
+                this.$.deleteItemDialog.open();
+                
+            },
+
+            deleteItem: function(e){
+                this.fire('delete-productgroup',this.tempKey);
+                this._showList();
+            },
+
+
+            addItemToShoppinglist: function(e){
+                var key = e.model.__data__.productgroup.key;
+
+                if(typeof this.shoppinglist.productgroups == 'undefined'){
+                    this.set('shoppinglist.productgroups',{})
+                }
+
+                if(typeof this.shoppinglist.productgroups[key] == 'undefined'){
+                    // add the key and set 1 for the quantity
+                    this.set('shoppinglist.productgroups.'+key,{'quantity':1});
+                }
+                else{
+                    // add 1 packageunit to the qunatity
+                    this.set('shoppinglist.productgroups.'+key+'.quantity',parseFloat(this.shoppinglist.productgroups[key].quantity) + 1);
+                }
+    
+                // open a the shoppinglist dialog
+                var dialog = this.$.shoppinglistDialog
+                dialog.open();
+                /*setTimeout(function(){
+                    dialog.close();
+                },1000);*/
+            },
+
+            addProduct: function(){
+                this.$.addProductDialog.open()
+            },
+
+            addProductToProductgroup: function(e){
+                var key = e.model.__data__.product.key;
+                console.log(key)
+                if(typeof this.tempItem.products == 'undefined'){
+                    this.set('tempItem.products',{})
+                }
+
+                if(typeof this.tempItem.products[key] == 'undefined'){
+                    // add the key and set 1 packageunit for the quantity
+                    this.set('tempItem.products.'+key,{'quantity':this.products[key].packagequantity});
+                }
+                else{
+                    // add 1 packageunit to the qunatity
+                    this.set('tempItem.products.'+key+'.quantity',parseFloat(this.tempItem.products[key].quantity) + parseFloat(this.products[key].packagequantity));
+                }
+            },
+
+            deleteProduct: function(e){
+                var key = e.model.__data__.product.key;
+                this.set('tempItem.products.'+key,null);
+            },
+
+            getProductSecondQuantity: function(products,key,quantity){
+                return quantity*products[key]['unitconversion'];
+            },
+
+            _getObjectListProperty: function(list,key,property){
+                if(typeof list != 'undefined'){
+                    return list[key][property];
+                }
+            },
+
+            _getProducts: function(change){
+                return this._toArray(change.base.products);
+            },
+
+            _toArray: function(obj){
+                if(typeof obj != 'undefined'){
+                    var array = Object.keys(obj).map(function(key){
+                        if(obj[key] != null){
+                            return {key:key, val:obj[key]};
+                        }
+                    });
+                    // remove undefined elements
+                    array = array.filter(function( val ) {
+                       return val !== undefined;
+                    });
+                    return array;
+                }
+            },
+
+            _showList: function(e){
+                this.set('route.path','');
+                this.set('routeData.key','');
+            },
+
+            _computeFilter: function(string){
+
+                string = string.toLowerCase();
+                return function(product) {
+                    var name = product.val.name.toLowerCase();
+                    return (name.indexOf(string) != -1 );
+                  };
+            },
+
+            _productgroupsChanged(change){
+                if(typeof this.tempKey != 'undefined' && typeof this.productgroups[this.tempKey] != 'undefined'){
+                    this.tempItem = JSON.parse(JSON.stringify(this.productgroups[this.tempKey]));
+                }
+            },
+
+            _routeKeyChanged(key){
+                if(typeof key=='undefined' || key==''){
+                    this.$.productgroupDetail.close();
+                }
+                else{
+                    if(key=='-1'){
+                        this.tempKey = btoa(this.user.uid + Date.now());
+                        this.tempItem = {
+                            'name':'newgroup',
+                            'products': [],
+                        };
+                    }
+                    else{
+                        this.tempKey = key;
+                        if(typeof this.productgroups[key] != 'undefined'){
+                            this.tempItem = JSON.parse(JSON.stringify(this.productgroups[key]));
+                        }
+                    }
+                    this.$.productgroupDetail.open();
+                }
+            }
+                        
+        });
+
+    </script>
+
+</dom-module>

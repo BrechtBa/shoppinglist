@@ -1,0 +1,265 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
+
+<link rel="import" href="items-list.html">
+
+<dom-module id="view-shoppinglist">
+
+    <template>
+
+        <style include="iron-flex iron-flex-alignment"></style>
+        <style>
+            :host {
+                display: block;
+                padding: 10px;
+            }
+            .product paper-checkbox{
+                width: 40px;
+                margin-left: 20px;
+            }
+            .product .name{
+                max-width: 400px;
+            }
+            .product .quantity{
+                width: 80px;
+                text-align: right;
+            }
+            .product .unit{
+                width: 40px;
+                margin-left: 3px;
+            }
+            .product .secondquantity{
+                width: 40px;
+                text-align: right;
+            }
+        </style>
+        
+        
+        
+        <paper-material class="editshoppinglist">
+            <paper-button raised on-tap="clearShoppinglistDialog">Clear shoppinglist</paper-button>
+            
+            <h2>Products</h2>
+            <template is="dom-repeat" items="{{_toArray(shoppinglist.products)}}" as="product">
+                <paper-material class="product horizontal layout center">
+                    <div class="name flex">{{_getObjectListProperty(products,product.key,'name')}}</div>
+                    <div class="quantity"><paper-input label="Quantity" value="{{product.val.quantity}}" no-label-float="true" on-change="_handleProductQuantityChange"></paper-input></div>
+                    <div class="unit">{{_getObjectListProperty(products,product.key,'unit')}}</div>
+                    <div class="secondquantity">{{_getProductSecondQuantity(products,product.key,product.quantity)}}</div>
+                    <div class="unit">{{_getObjectListProperty(products,product.key,'secondunit')}}</div>
+
+                    <paper-icon-button icon="delete" raised on-tap="deleteProduct">Delete</paper-icon-button>
+                </paper-material>
+            </template>
+
+            <h2>Product groups</h2>
+            <template is="dom-repeat" items="{{_toArray(shoppinglist.productgroups)}}" as="productgroup">
+                <paper-material class="product horizontal layout center">
+                    <div class="name flex">{{_getObjectListProperty(productgroups,productgroup.key,'name')}}</div>
+                    <div class="quantity"><paper-input label="Quantity" value="{{productgroup.val.quantity}}" no-label-float="true" on-change="_handleProductgroupQuantityChange"></paper-input></div>
+
+                    <paper-icon-button icon="delete" raised on-tap="deleteProductgroup">Delete</paper-icon-button>
+                </paper-material>
+            </template>
+
+        <paper-material>
+
+        <paper-material class="shoppinglist">
+            <h1>Shopping list</h1>
+            <template is="dom-repeat" items="{{_toArray(shoppinglistproducts)}}" as="product" sort="_sortByOrder">
+                <paper-material class="product horizontal layout center">
+                    <paper-checkbox></paper-checkbox>
+                    <div class="name flex">{{_getObjectListProperty(products,product.key,'name')}}</div>
+                    <div class="quantity">{{product.val.quantity}}</div>
+                    <div class="unit">{{_getObjectListProperty(products,product.key,'unit')}}</div>
+                </paper-material>
+            </template>
+        <paper-material>
+
+
+        <paper-dialog id="clearShoppinglistDialog">
+            <h2>Clear the shoppinglist?</h2>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Cancel</paper-button>
+                <paper-button dialog-confirm on-tap="clearShoppinglist">Clear</paper-button>
+            </div>
+        </paper-dialog>
+
+
+    </template>
+
+    <script>
+
+        Polymer({
+
+            is: 'view-shoppinglist',
+
+            properties:{
+                shoppinglist: {
+                    type: 'Object',
+                    notify: true
+                },
+                shoppinglistproducts: {
+                    type: 'Object',
+                    notify: true
+                },
+                products: {
+                    type: 'Object',
+                    notify: true
+                },
+                productgroups: {
+                    type: 'Object',
+                    notify: true
+                },
+            },
+
+            observers: [
+                '_routeIdChanged(routeData.key)',
+                '_getAllProducts(shoppinglist.*,products.*,productgroups.*)'
+            ],
+
+            clearShoppinglistDialog: function(){
+                this.$.clearShoppinglistDialog.open();
+            },
+
+            clearShoppinglist: function(){
+                this.fire('clear-shoppinglist');
+            },
+
+            deleteProduct: function(e){
+                var key = e.model.__data__.product.key;
+                this.set('shoppinglist.products.'+key,null);
+            },
+
+            deleteProductgroup: function(e){
+                var key = e.model.__data__.productgroup.key;
+                this.set('shoppinglist.productgroups.'+key,null);
+            },
+
+            _handleProductQuantityChange: function(e){
+                console.log(e);
+                var key = e.model.__data__.product.key;
+                var quantity = e.model.__data__.product.val.quantity;
+                if(quantity ==''){
+                    quantity = 0;
+                }
+                this.set('shoppinglist.products.'+key+'.quantity',quantity);
+            },
+
+            _handleProductgroupQuantityChange: function(e){
+                var key = e.model.__data__.productgroup.key;
+                var quantity = e.model.__data__.productgroup.val.quantity;
+                if(quantity ==''){
+                    quantity = 0;
+                }
+                this.set('shoppinglist.productgroups.'+key+'.quantity',quantity);
+            },
+
+            _getProductSecondQuantity: function(products,key,quantity){
+                return quantity*products[key]['unitconversion'];
+            },
+
+            _getAllProducts: function(shoppinglistChange,allproductsChange,allproductgroupsChange){
+                var shoppinglist = this.shoppinglist;
+                var allproducts = this.products;
+                var allproductgroups = this.productgroups;
+
+                var products = {};
+
+                var that = this;
+                var shoppinglistProductsArray = this._toArray(shoppinglist.products);
+                var shoppinglistProductgroupsArray = this._toArray(shoppinglist.productgroups)
+
+                // add products
+                if(typeof shoppinglistProductsArray != 'undefined'){
+                    this._toArray(shoppinglist.products).forEach(function(product){
+                        if(product.val != null){
+                            products[product.key] = {'quantity': parseFloat(product.val.quantity), 'checked': false};
+                        }
+                    });
+                }
+
+                // add productgroups
+                if(typeof shoppinglistProductgroupsArray != 'undefined'){
+                    shoppinglistProductgroupsArray.forEach(function(productgroup){
+
+                        if(productgroup.val != null){
+                            var productgroupProducts = that._toArray(allproductgroups[productgroup.key].products);
+                            if(typeof productgroupProducts != 'undefined'){
+                                productgroupProducts.forEach(function(product){
+
+                                    if(typeof products[product.key] == 'undefined'){
+                                        products[product.key]= {'quantity': parseFloat(product.val.quantity*productgroup.val.quantity), 'checked': false};
+                                    }
+                                    else{
+                                        products[product.key]['quantity'] += parseFloat(product.val.quantity*productgroup.val.quantity);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+
+                // filter 0 quantity products
+                var filteredproducts = {};
+                for(var key in products){
+                    if(products[key].quantity > 0){ 
+                        filteredproducts[key] = products[key];
+                    }
+                }
+                var that = this;
+                this.async(function(){
+                    that.set('shoppinglistproducts',filteredproducts);
+                },200);
+            },
+
+            _getObjectListProperty: function(list,key,property){
+                if(typeof list != 'undefined'){
+                    return list[key][property];
+                }
+            },
+
+            _toArray: function(obj){
+                if(typeof obj != 'undefined'){
+                    var array = Object.keys(obj).map(function(key){
+                        if(obj[key] != null){
+                            return {key:key, val:obj[key]};
+                        }
+                    });
+                    // remove undefined elements
+                    array = array.filter(function( val ) {
+                       return val !== undefined;
+                    });
+                    return array;
+                }
+            },
+
+            _sortByOrder: function(a,b){
+                a_order = parseFloat(this._getObjectListProperty(this.products,a.key,'order'));
+                b_order = parseFloat(this._getObjectListProperty(this.products,b.key,'order'));
+
+                if(a_order>b_order){
+                    return 1;
+                }
+                else if(a_order<b_order){
+                    return -1;
+                }
+                else{
+                    return 0;
+                }
+            },
+
+        });
+
+    </script>
+
+</dom-module>

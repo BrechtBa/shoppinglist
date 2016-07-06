@@ -1,0 +1,287 @@
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-localstorage/iron-localstorage.html">
+
+<link rel="import" href="../bower_components/app-route/app-route.html">
+
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
+
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+
+<link rel="import" href="items-list.html">
+
+<dom-module id="view-products">
+
+    <template>
+
+        <style include="iron-flex iron-flex-alignment"></style>
+        <style>
+            :host {
+                display: block;
+                padding: 10px;
+            }
+            .product .name{
+                max-width: 200px;
+            }
+            .product .store{
+                max-width: 200px;
+            }
+            .shoppinglist{
+                padding-bottom: 10px;
+            }
+            .shoppinglist .product{
+                margin-top: 5px;
+            }
+            .shoppinglist .product .quantity{
+                width: 80px;
+                text-align: right;
+            }
+            .shoppinglist .product .unit{
+                margin-left: 3px;
+                width: 30px;
+                text-align: left;
+            }
+            iron-icon{
+                --iron-icon-fill-color: #555555;
+            }
+        </style>
+
+
+
+        <app-route route="{{route}}" pattern="/:key" data="{{routeData}}" tail="{{subroute}}"></app-route>
+
+
+        <paper-button raised on-tap="newItem">New product</paper-button>
+        <paper-input label="search" no-label-float value="{{productSearch}}"><iron-icon icon="search" suffix></iron-icon></paper-input>
+
+        <template is="dom-repeat" items="{{_toArray(products)}}" as="product" filter="{{_computeFilter(productSearch)}}" observe="name">
+            <paper-material class="product horizontal layout wrap" on-tap="addItemToShoppinglist">
+                <div class="name flex">{{product.val.name}}</div>
+                <div class="store flex">{{product.val.store}}</div>
+                <paper-icon-button icon="create" raised on-tap="editItem">Edit</paper-icon-button>
+            </paper-material>
+        </template>
+
+
+
+        <paper-dialog id="productDetail" on-iron-overlay-closed="_showList">
+            <paper-dialog-scrollable>
+                <h3>Product Details</h3>
+
+                <paper-input label="Name" value="{{tempItem.name}}"></paper-input>
+                <div class="horizontal layout">
+                    <div>
+                        <paper-input label="Unit" value="{{tempItem.unit}}"></paper-input>
+                    </div>
+                    <div>&nbsp;</div>
+                    <div>
+                        <paper-input label="Second unit" value="{{tempItem.secondunit}}"></paper-input>
+                        <paper-input label="Unit conversion" value="{{tempItem.unitconversion}}"></paper-input>
+                    </div>
+                </div>
+
+                <paper-input label="Package quantity" value="{{tempItem.packagequantity}}"></paper-input>
+                <paper-input label="Store" value="{{tempItem.store}}"></paper-input>
+                <paper-input label="Price" value="{{tempItem.price}}"></paper-input>
+                <paper-input label="Order" value="{{tempItem.order}}"></paper-input>
+
+                <div class="buttons">
+                    <paper-button dialog-dismiss>Cancel</paper-button>
+                    <paper-button dialog-confirm on-tap="saveItem">Save</paper-button>
+                    <paper-button raised on-tap="deleteItemDialog">Delete</paper-button>
+                </div>
+            </paper-dialog-scrollable>
+        </paper-dialog>
+
+
+
+        <paper-dialog id="deleteItemDialog">
+            <h2>Are you sure?</h2>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Cancel</paper-button>
+                <paper-button dialog-confirm on-tap="deleteItem">Delete</paper-button>
+            </div>
+        </paper-dialog>
+
+
+
+        <paper-dialog id="shoppinglistDialog" class="shoppinglist" vertical-align="top" horizontal-align="right">
+            <h3>Shoppinglist</h3>
+
+            <template is="dom-repeat" items="{{_toArray(shoppinglist.products)}}" as="product">
+                <div class="product horizontal layout">
+                    <div class="flex">{{_getObjectListProperty(products,product.key,'name')}}</div>
+                    <div class="quantity">{{product.val.quantity}}</div>
+                    <div class="unit">{{_getObjectListProperty(products,product.key,'unit')}}</div>
+                    
+                </div>
+            </template>
+
+        </paper-dialog>
+
+
+
+    </template>
+
+    <script>
+
+        Polymer({
+            is: 'view-products',
+            properties:{
+                user: {
+                    type: 'Object'
+                },
+                products: {
+                    type: 'Object',
+                    notify: true
+                },
+                shoppinglist: {
+                    type: 'Object',
+                    notify: true
+                },
+                route: {
+                    type: 'string'
+                }
+            },
+
+            observers: [
+                '_routeKeyChanged(routeData.key)',
+                '_productsChanged(products.*)'
+            ],
+
+
+            itemlist: function(object){
+                return Object.keys(object).map(function(key) {return object[key]});
+            },
+
+            newItem: function(){
+                this.set('route.path','/-1');
+            },
+
+            editItem: function(e){
+                e.stopPropagation();
+                var key = e.model.__data__.product.key;
+                this.set('route.path','/'+key);
+            },
+
+            saveItem: function(e){
+                this.set('products.'+this.tempKey,this.tempItem);
+            },
+
+            deleteItemDialog: function(e){
+                e.stopPropagation();
+                this.$.deleteItemDialog.open();
+            },
+
+            deleteItem: function(e){
+                // fire an to delete the product
+                this.fire('delete-product',this.tempKey);
+                this._showList();
+            },
+
+            addItemToShoppinglist: function(e){
+                var key = e.model.__data__.product.key;
+
+                if(typeof this.shoppinglist.products == 'undefined'){
+                    this.set('shoppinglist.products',{})
+                }
+
+                if(typeof this.shoppinglist.products[key] == 'undefined'){
+                    // add the key and set 1 packageunit for the quantity
+                    this.set('shoppinglist.products.'+key,{'quantity':this.products[key].packagequantity});
+                }
+                else{
+                    // add 1 packageunit to the qunatity
+                    this.set('shoppinglist.products.'+key+'.quantity',parseFloat(this.shoppinglist.products[key].quantity) + parseFloat(this.products[key].packagequantity));
+                }
+
+                // open a the shoppinglist dialog
+                var dialog = this.$.shoppinglistDialog
+                dialog.open();
+                /*setTimeout(function(){
+                    dialog.close();
+                },1000);*/
+            },
+
+
+            _getObjectListProperty: function(list,key,property){
+                if(typeof list != 'undefined'){
+                    return list[key][property];
+                }
+            },
+
+            _toArray: function(obj){
+                if(typeof obj != 'undefined'){
+                    var array = Object.keys(obj).map(function(key){
+                        if(obj[key] != null){
+                            return {key:key, val:obj[key]};
+                        }
+                    });
+                    // remove undefined elements
+                    array = array.filter(function( val ) {
+                       return val !== undefined;
+                    });
+                    return array;
+                }
+            },
+
+            _showList: function(e){
+                this.set('route.path','');
+                this.set('routeData.key','');
+            },
+
+            _computeFilter: function(string){
+
+                string = string.toLowerCase();
+                return function(item){
+                    var name = item.val.name.toLowerCase();
+                    return (name.indexOf(string) != -1 );
+                };
+            },
+
+            _productsChanged(change){
+                if(typeof this.tempKey != 'undefined' && typeof this.products[this.tempKey] != 'undefined'){
+                    this.tempItem = JSON.parse(JSON.stringify(this.products[this.tempKey]));
+                }
+            },
+
+            _routeKeyChanged(key){
+                if(typeof key=='undefined' || key==''){
+                    this.$.productDetail.close()
+                }
+                else{
+                    if(key=='-1'){
+                        this.tempKey = btoa(this.user.uid + Date.now());
+                        this.tempItem = {
+                            'name':'newproduct',
+                            'unit':'',
+                            'secondunit':'',
+                            'unitconversion':1,
+                            'packagequantity':1,
+                            'price':0,
+                            'store':-1,
+                            'order': Object.keys(this.products).length
+                        };
+                    }
+                    else{
+                        this.tempKey = key;
+                        if(typeof this.products[key] != 'undefined'){
+                            this.tempItem = JSON.parse(JSON.stringify(this.products[key]));
+                        }
+                    }
+                    this.$.productDetail.open();
+                }
+            }
+                        
+        });
+
+    </script>
+
+</dom-module>
