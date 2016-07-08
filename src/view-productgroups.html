@@ -50,15 +50,16 @@
             .product paper-icon-button{
                 width: 40px;
             }
-            .shoppinglist{
-                padding-bottom: 10px;
+            .shoppinglist paper-dialog-scrollable{
+                margin-top: 25px !important;
+                --paper-dialog-scrollable:{
+                    padding: 5px;
+                };
             }
-            .shoppinglist .productgroup{
-                margin-top: 5px;
-            }
-            .shoppinglist .productgroup .quantity{
-                width: 80px;
-                text-align: right;
+            .shoppinglist .close{
+                position: absolute;
+                top: -20px;
+                right: 0;
             }
         </style>
 
@@ -68,7 +69,12 @@
 
 
 
-        <paper-button raised on-tap="newItem">New product group</paper-button>
+        <div class="horizontal layout">
+            <paper-button raised on-tap="newItem">New product group</paper-button>
+            <div class="flex">&nbsp;</div>
+            <paper-button raised on-tap="showShoppinglist">Shoppinglist</paper-button>
+        </div>
+
 
         <template is="dom-repeat" items="{{_toArray(productgroups)}}" as="productgroup">
             <paper-material class="productgroup horizontal layout wrap" on-tap="addItemToShoppinglist">
@@ -139,15 +145,10 @@
 
 
         <paper-dialog id="shoppinglistDialog" class="shoppinglist" vertical-align="top" horizontal-align="right">
-            <h3>Shoppinglist</h3>
-
-            <template is="dom-repeat" items="{{_toArray(shoppinglist.productgroups)}}" as="productgroup">
-                <div class="product horizontal layout">
-                    <div class="flex">{{_getObjectListProperty(productgroups,productgroup.key,'name')}}</div>
-                    <div class="quantity">{{productgroup.val.quantity}}</div>
-                </div>
-            </template>
-
+            <paper-button class="close" on-tap="hideShoppinglist">close</paper-button>
+            <paper-dialog-scrollable>
+                <shoppinglist-detail shoppinglist="{{shoppinglist}}" products="{{products}}" productgroups="{{productgroups}}"></shoppinglist-detail>
+            </paper-dialog-scrollable>
         </paper-dialog>
 
 
@@ -159,15 +160,18 @@
         Polymer({
             is: 'view-productgroups',
             properties:{
-                shoppinglist: {
-                    type: 'Object',
-                    notify: true
+                user: {
+                    type: 'Object'
                 },
                 products: {
                     type: 'Object',
                     notify: true
                 },
                 productgroups: {
+                    type: 'Object',
+                    notify: true
+                },
+                shoppinglist: {
                     type: 'Object',
                     notify: true
                 },
@@ -224,11 +228,19 @@
                 }
     
                 // open a the shoppinglist dialog
-                var dialog = this.$.shoppinglistDialog
-                dialog.open();
-                /*setTimeout(function(){
-                    dialog.close();
+                this.showShoppinglist();
+                /*var that = this
+                setTimeout(function(){
+                    that.hideShoppinglist();
                 },1000);*/
+            },
+
+            showShoppinglist: function(e){
+                this.$.shoppinglistDialog.open();
+            },
+
+            hideShoppinglist: function(e){
+                this.$.shoppinglistDialog.close();
             },
 
             addProduct: function(){

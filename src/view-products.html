@@ -15,7 +15,7 @@
 <link rel="import" href="../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 
-<link rel="import" href="items-list.html">
+<link rel="import" href="shoppinglist-detail.html">
 
 <dom-module id="view-products">
 
@@ -33,23 +33,19 @@
             .product .store{
                 max-width: 200px;
             }
-            .shoppinglist{
-                padding-bottom: 10px;
-            }
-            .shoppinglist .product{
-                margin-top: 5px;
-            }
-            .shoppinglist .product .quantity{
-                width: 80px;
-                text-align: right;
-            }
-            .shoppinglist .product .unit{
-                margin-left: 3px;
-                width: 30px;
-                text-align: left;
-            }
             iron-icon{
                 --iron-icon-fill-color: #555555;
+            }
+            .shoppinglist paper-dialog-scrollable{
+                margin-top: 25px !important;
+                --paper-dialog-scrollable:{
+                    padding: 5px;
+                };
+            }
+            .shoppinglist .close{
+                position: absolute;
+                top: -20px;
+                right: 0;
             }
         </style>
 
@@ -57,8 +53,12 @@
 
         <app-route route="{{route}}" pattern="/:key" data="{{routeData}}" tail="{{subroute}}"></app-route>
 
+        <div class="horizontal layout">
+            <paper-button raised on-tap="newItem">New product</paper-button>
+            <div class="flex">&nbsp;</div>
+            <paper-button raised on-tap="showShoppinglist">Shoppinglist</paper-button>
+        </div>
 
-        <paper-button raised on-tap="newItem">New product</paper-button>
         <paper-input label="search" no-label-float value="{{productSearch}}"><iron-icon icon="search" suffix></iron-icon></paper-input>
 
         <template is="dom-repeat" items="{{_toArray(products)}}" as="product" filter="{{_computeFilter(productSearch)}}" observe="name">
@@ -113,17 +113,10 @@
 
 
         <paper-dialog id="shoppinglistDialog" class="shoppinglist" vertical-align="top" horizontal-align="right">
-            <h3>Shoppinglist</h3>
-
-            <template is="dom-repeat" items="{{_toArray(shoppinglist.products)}}" as="product">
-                <div class="product horizontal layout">
-                    <div class="flex">{{_getObjectListProperty(products,product.key,'name')}}</div>
-                    <div class="quantity">{{product.val.quantity}}</div>
-                    <div class="unit">{{_getObjectListProperty(products,product.key,'unit')}}</div>
-                    
-                </div>
-            </template>
-
+            <paper-button class="close" on-tap="hideShoppinglist">close</paper-button>
+            <paper-dialog-scrollable>
+                <shoppinglist-detail shoppinglist="{{shoppinglist}}" products="{{products}}" productgroups="{{productgroups}}"></shoppinglist-detail>
+            </paper-dialog-scrollable>
         </paper-dialog>
 
 
@@ -139,6 +132,10 @@
                     type: 'Object'
                 },
                 products: {
+                    type: 'Object',
+                    notify: true
+                },
+                productgroups: {
                     type: 'Object',
                     notify: true
                 },
@@ -203,13 +200,20 @@
                 }
 
                 // open a the shoppinglist dialog
-                var dialog = this.$.shoppinglistDialog
-                dialog.open();
-                /*setTimeout(function(){
-                    dialog.close();
+                this.showShoppinglist();
+                /*var that = this
+                setTimeout(function(){
+                    that.hideShoppinglist();
                 },1000);*/
             },
+        
+            showShoppinglist: function(e){
+                this.$.shoppinglistDialog.open();
+            },
 
+            hideShoppinglist: function(e){
+                this.$.shoppinglistDialog.close();
+            },
 
             _getObjectListProperty: function(list,key,property){
                 if(typeof list != 'undefined'){

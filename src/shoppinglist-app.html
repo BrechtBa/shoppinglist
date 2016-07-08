@@ -128,9 +128,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
                 <iron-pages role="main" selected="[[page]]" attr-for-selected="name">
                     <view-login         id="login"         name="login" on-sign-in="signIn" signed-in="[[signedIn]]" disables=[[!online]]></view-login>
-                    <view-shoppinglist  id="shoppinglist"  name="shoppinglist"  user="[[user]]"  shoppinglist="{{shoppinglist}}" products="{{products}}" productgroups="{{productgroups}}" shoppinglistproducts="{{shoppinglistproducts}}" on-clear-shoppinglist="initializeShoppinglist"></view-shoppinglist>
-                    <view-products      id="products"      name="products"      user="[[user]]"  shoppinglist="{{shoppinglist}}" products="{{products}}" route="{{productsSubroute}}" on-delete-product="handleDeleteProduct"></view-products>
-                    <view-productgroups id="productgroups" name="productgroups" user="[[user]]"  shoppinglist="{{shoppinglist}}" products="{{products}}" productgroups="{{productgroups}}" route="{{productgroupsSubroute}}"></view-productgroups>
+                    <view-shoppinglist  id="shoppinglist"  name="shoppinglist"  user="[[user]]"  shoppinglist="{{shoppinglist}}" products="{{products}}" productgroups="{{productgroups}}" shoppinglistproducts="{{shoppinglistproducts}}" on-clear-shoppinglist="clearShoppinglist"></view-shoppinglist>
+                    <view-products      id="products"      name="products"      user="[[user]]"  shoppinglist="{{shoppinglist}}" products="{{products}}" productgroups="{{productgroups}}" route="{{productsSubroute}}" on-delete-product="handleDeleteProduct"></view-products>
+                    <view-productgroups id="productgroups" name="productgroups" user="[[user]]"  shoppinglist="{{shoppinglist}}" products="{{products}}" productgroups="{{productgroups}}" route="{{productgroupsSubroute}}" on-delete-productgroup="handleDeleteProductgroup"></view-productgroups>
                 </iron-pages>
 
             </app-header-layout>
@@ -159,7 +159,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             observers: [
                 '_routePageChanged(routeData.page)',
                 '_signedInChanged(signedIn)',
-                '_getProductsObject(productslist.*)'
+                'getAllProducts(shoppinglist.*,products.*,productgroups.*)'
             ],
 
             signIn: function(e){
@@ -171,15 +171,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 this.$.auth.signOut();
             },
 
-            initializeProducts: function(){
-                this.products = [];
-            },
-
-            initializeShoppinglist: function(){
-                this.shoppinglist = {
-                    'products': [],
-                    'productgroups': []
-                };
+            clearShoppinglist: function(){
+                this.set('shoppinglist.products',null);
+                this.set('shoppinglist.productgroups',null);
             },
 
             initializeProductgroups: function(){
@@ -198,6 +192,80 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 this.async(function(){
                     that.set('products.'+key,null);
                 });
+            },
+
+            handleDeleteProductgroup: function(e,key){
+
+
+            },
+
+            getAllProducts: function(shoppinglistChange,allproductsChange,allproductgroupsChange){
+                var shoppinglist = this.shoppinglist;
+                var allproducts = this.products;
+                var allproductgroups = this.productgroups;
+
+                var products = {};
+
+                var that = this;
+                var shoppinglistProductsArray = this._toArray(shoppinglist.products);
+                var shoppinglistProductgroupsArray = this._toArray(shoppinglist.productgroups)
+
+                // add products
+                if(typeof shoppinglistProductsArray != 'undefined'){
+                    this._toArray(shoppinglist.products).forEach(function(product){
+                        if(product.val != null){
+                            products[product.key] = {'quantity': parseFloat(product.val.quantity), 'checked': false};
+                        }
+                    });
+                }
+
+                // add productgroups
+                if(typeof shoppinglistProductgroupsArray != 'undefined'){
+                    shoppinglistProductgroupsArray.forEach(function(productgroup){
+
+                        if(productgroup.val != null){
+                            var productgroupProducts = that._toArray(allproductgroups[productgroup.key].products);
+                            if(typeof productgroupProducts != 'undefined'){
+                                productgroupProducts.forEach(function(product){
+
+                                    if(typeof products[product.key] == 'undefined'){
+                                        products[product.key]= {'quantity': parseFloat(product.val.quantity*productgroup.val.quantity), 'checked': false};
+                                    }
+                                    else{
+                                        products[product.key]['quantity'] += parseFloat(product.val.quantity*productgroup.val.quantity);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+
+                // filter 0 quantity products
+                var filteredproducts = {};
+                for(var key in products){
+                    if(products[key].quantity > 0){ 
+                        filteredproducts[key] = products[key];
+                    }
+                }
+                var that = this;
+                this.async(function(){
+                    that.set('shoppinglistproducts',filteredproducts);
+                },200);
+            },
+
+            _toArray: function(obj){
+                if(typeof obj != 'undefined' && obj !== null){
+                    var array = Object.keys(obj).map(function(key){
+                        if(obj[key] != null){
+                            return {key:key, val:obj[key]};
+                        }
+                    });
+                    // remove undefined elements
+                    array = array.filter(function( val ) {
+                       return val !== undefined;
+                    });
+                    return array;
+                }
             },
 
             _signedInChanged: function(signedIn){
