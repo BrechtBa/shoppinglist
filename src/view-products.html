@@ -16,33 +16,33 @@
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 
 <link rel="import" href="shoppinglist-detail.html">
+<link rel="import" href="shared-styles.html">
 
 <dom-module id="view-products">
 
     <template>
 
         <style include="iron-flex iron-flex-alignment"></style>
+        <style include="shared-styles"></style>
         <style>
             :host {
                 display: block;
                 padding: 10px;
             }
-            .product .name{
-                max-width: 200px;
+            .product{
+                background-color: #ffffff;
             }
-            .product .store{
-                max-width: 200px;
+            paper-input.search{
+                margin-top: 8px;
+                margin-bottom: 8px;
             }
-            iron-icon{
-                --iron-icon-fill-color: #555555;
-            }
-            .shoppinglist paper-dialog-scrollable{
+            #shoppinglist paper-dialog-scrollable{
                 margin-top: 25px !important;
                 --paper-dialog-scrollable:{
                     padding: 5px;
                 };
             }
-            .shoppinglist .close{
+            paper-dialog paper-button.close{
                 position: absolute;
                 top: -20px;
                 right: 0;
@@ -59,10 +59,10 @@
             <paper-button raised on-tap="showShoppinglist">Shoppinglist</paper-button>
         </div>
 
-        <paper-input label="search" no-label-float value="{{productSearch}}"><iron-icon icon="search" suffix></iron-icon></paper-input>
+        <paper-input class="search" label="search" no-label-float value="{{productSearch}}"><iron-icon icon="search" suffix></iron-icon></paper-input>
 
         <template is="dom-repeat" items="{{_toArray(products)}}" as="product" filter="{{_computeFilter(productSearch)}}" observe="name">
-            <paper-material class="product horizontal layout wrap" on-tap="addItemToShoppinglist">
+            <paper-material class="product horizontal layout center wrap" on-tap="addItemToShoppinglist">
                 <div class="name flex">{{product.val.name}}</div>
                 <div class="store flex">{{product.val.store}}</div>
                 <paper-icon-button icon="create" raised on-tap="editItem">Edit</paper-icon-button>
@@ -93,8 +93,8 @@
                 <paper-input label="Order" value="{{tempItem.order}}"></paper-input>
 
                 <div class="buttons">
-                    <paper-button dialog-dismiss>Cancel</paper-button>
-                    <paper-button dialog-confirm on-tap="saveItem">Save</paper-button>
+                    <paper-button raised dialog-dismiss>Cancel</paper-button>
+                    <paper-button raised dialog-confirm on-tap="saveItem">Save</paper-button>
                     <paper-button raised on-tap="deleteItemDialog">Delete</paper-button>
                 </div>
             </paper-dialog-scrollable>
@@ -112,7 +112,7 @@
 
 
 
-        <paper-dialog id="shoppinglistDialog" class="shoppinglist" vertical-align="top" horizontal-align="right">
+        <paper-dialog id="shoppinglistDialog" vertical-align="top" horizontal-align="right">
             <paper-button class="close" on-tap="hideShoppinglist">close</paper-button>
             <paper-dialog-scrollable>
                 <shoppinglist-detail shoppinglist="{{shoppinglist}}" products="{{products}}" productgroups="{{productgroups}}"></shoppinglist-detail>
@@ -222,7 +222,7 @@
             },
 
             _toArray: function(obj){
-                if(typeof obj != 'undefined'){
+                if(typeof obj != 'undefined' && obj !== null){
                     var array = Object.keys(obj).map(function(key){
                         if(obj[key] != null){
                             return {key:key, val:obj[key]};
@@ -270,7 +270,7 @@
                             'unitconversion':1,
                             'packagequantity':1,
                             'price':0,
-                            'store':-1,
+                            'store':'',
                             'order': Object.keys(this.products).length
                         };
                     }
