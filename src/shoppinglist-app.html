@@ -298,7 +298,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             _pageChanged: function(page) {
                 // load page import on demand.
-                this.importHref( this.resolveUrl('view-' + page + '.html'), null, null, true );
+                if(page != 'login'){
+                    this.importHref( this.resolveUrl('view-' + page + '.html'), null, null, true );
+                }
             },
 
         });

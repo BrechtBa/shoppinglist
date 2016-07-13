@@ -3,8 +3,9 @@
   "shell": "src/shoppinglist-app.html",
   "fragments": [
     "src/view-login.html",
-    "src/view-shoppinglists.html",
+    "src/view-shoppinglist.html",
     "src/view-products.html",
-    "src/view-productgroups.html"
+    "src/view-productgroups.html",
+    "src/shoppinglist-detail.html"
   ]
 }
