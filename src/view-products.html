@@ -50,7 +50,6 @@
         </style>
 
 
-
         <app-route route="{{route}}" pattern="/:key" data="{{routeData}}" tail="{{subroute}}"></app-route>
 
         <div class="horizontal layout">
@@ -61,13 +60,15 @@
 
         <paper-input class="search" label="search" no-label-float value="{{productSearch}}"><iron-icon icon="search" suffix></iron-icon></paper-input>
 
-        <template is="dom-repeat" items="{{_toArray(products)}}" as="product" filter="{{_computeFilter(productSearch)}}" observe="name">
-            <paper-material class="product horizontal layout center wrap" on-tap="addItemToShoppinglist">
+        <template is="dom-repeat" items="{{_toArray(products)}}" as="product" filter="{{_computeFilter(productSearch)}}" sort="_sortByName" observe="val.name">
+            <paper-material class="product horizontal layout center wrap" on-tap="addItemToShoppinglist" key="[[product.key]]">
                 <div class="name flex">{{product.val.name}}</div>
                 <div class="store flex">{{product.val.store}}</div>
+                <div class="flex">{{product.val.order}}</div>
                 <paper-icon-button icon="create" raised on-tap="editItem">Edit</paper-icon-button>
             </paper-material>
         </template>
+
 
 
 
@@ -282,8 +283,23 @@
                     }
                     this.$.productDetail.open();
                 }
-            }
-                        
+            },
+
+            _sortByName: function(a,b){
+                var a_order = parseFloat(this._getObjectListProperty(this.products,a.key,'order'));
+                var b_order = parseFloat(this._getObjectListProperty(this.products,b.key,'order'));
+
+                if(a_order>b_order){
+                    return 1;
+                }
+                else if(a_order<b_order){
+                    return -1;
+                }
+                else{
+                    return 0;
+                }
+            },
+ 
         });
 
     </script>

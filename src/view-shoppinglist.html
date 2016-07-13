@@ -9,6 +9,7 @@
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../bower_components/Sortable/Sortable.html">
 
 <link rel="import" href="shared-styles.html">
 
@@ -53,14 +54,19 @@
         
         <paper-material class="shoppinglist">
             <h1>Shopping list</h1>
-            <template is="dom-repeat" items="{{_toArray(shoppinglistproducts)}}" as="product" sort="_sortByOrder">
-                <paper-material class="product horizontal layout center">
-                    <paper-checkbox></paper-checkbox>
-                    <div class="name flex">{{_getObjectListProperty(products,product.key,'name')}}</div>
-                    <div class="quantity">{{_round(product.val.quantity,2)}}</div>
-                    <div class="unit">{{_getObjectListProperty(products,product.key,'unit')}}</div>
-                </paper-material>
-            </template>
+
+            <sortable-js on-update="_updateOrder" manually-handle-update-events>
+                <template id="shoppinglistproductsdomrepeat" is="dom-repeat" items="{{_toOrderedArray(shoppinglistproducts)}}" as="product">
+                    <paper-material class="product horizontal layout center">
+                        <paper-checkbox></paper-checkbox>
+                        <div class="name flex">{{_getObjectListProperty(products,product.key,'name')}}</div>
+                        <div class="quantity">{{_round(product.val.quantity,2)}}</div>
+                        <div class="unit">{{_getObjectListProperty(products,product.key,'unit')}}</div>
+                        <div class="flex">{{_getObjectListProperty(products,product.key,'order')}}</div>
+                    </paper-material>
+                </template>
+            </sortable-js>
+
         </paper-material>
 
         <div class="horizontal layout">
@@ -123,7 +129,6 @@
             },
 
             _handleProductQuantityChange: function(e){
-                console.log(e);
                 var key = e.model.__data__.product.key;
                 var quantity = e.model.__data__.product.val.quantity;
                 if(quantity ==''){
@@ -152,7 +157,8 @@
             },
 
             _round: function(number,digits){
-                return number;
+                var rounded = Math.round(number*Math.pow(10,digits))/Math.pow(10,digits)
+                return rounded;
             },
 
             _toArray: function(obj){
@@ -168,6 +174,98 @@
                     });
                     return array;
                 }
+            },
+
+            _toOrderedArray: function(obj){
+                var that = this;
+                var array = that._toArray(obj);
+                array.sort(function(a,b){
+                    a_order = parseFloat(that._getObjectListProperty(that.products,a.key,'order'));
+                    b_order = parseFloat(that._getObjectListProperty(that.products,b.key,'order'));
+
+                    if(a_order>b_order){
+                        return 1;
+                    }
+                    else if(a_order<b_order){
+                        return -1;
+                    }
+                    else{
+                        return 0;
+                    }
+                });
+                return array;
+            },
+
+            _updateOrder: function(e){
+                if(typeof e.oldIndex != 'undefined' && typeof e.newIndex != 'undefined' && typeof e.item.dataHost.__data__ != 'undefined'){
+
+                    var that = this;
+
+                    // get current product key
+                    var key = e.item.dataHost.__data__.product.key;
+                    var oldorder = parseFloat(that.products[key].order);
+
+                    var productslist = that._toArray(that.products);
+                    
+                    var shoppinglistproductslist = that._toArray(that.shoppinglistproducts).sort(function(a,b){
+                        a_order = parseFloat(that._getObjectListProperty(that.products,a.key,'order'));
+                        b_order = parseFloat(that._getObjectListProperty(that.products,b.key,'order'));
+
+                        if(a_order>b_order){
+                            return 1;
+                        }
+                        else if(a_order<b_order){
+                            return -1;
+                        }
+                        else{
+                            return 0;
+                        }
+                    });
+
+                    // new order
+                    var neworder = parseFloat(that.products[shoppinglistproductslist[e.newIndex].key].order);
+                    //console.log('oldorder: '+ oldorder)
+                    //console.log('neworder: '+ neworder)
+
+                    if(e.oldIndex<e.newIndex){
+                        // put after
+                        productslist.forEach(function(product){
+                            var order = parseFloat(product.val.order)
+
+                            if(order == oldorder){
+                                var productorder = neworder;
+                            }
+                            else if(order > oldorder && order <= neworder){
+                                var productorder = order-1;
+                            }
+                            //that.products[product.key].order = productorder;
+                            that.set('products.'+product.key+'.order', productorder);
+                            //console.log(String(order) +' --> '+String(productorder));
+                        });
+                    }
+                    else{
+                        // put before
+                        productslist.forEach(function(product){
+                            var order = parseFloat(product.val.order)
+
+                            if(order == oldorder){
+                                var productorder = neworder;
+                            }
+                            else if(order < oldorder && order >= neworder){
+                                var productorder = order+1;
+                            }
+                            //that.products[product.key].order = productorder;
+                            that.set('products.'+product.key+'.order', productorder);
+                            //console.log(String(order) +' --> '+String(productorder));
+                        });
+
+                    }
+                    // update sorting
+                    //that.set('products',JSON.parse(JSON.stringify(this.products)));
+                    //this.$.shoppinglistproductsdomrepeat.render()
+                    //this.products = JSON.parse(JSON.stringify(this.products));
+                }
+            
             },
 
             _sortByOrder: function(a,b){

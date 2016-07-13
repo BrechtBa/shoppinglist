@@ -114,6 +114,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     <a name="productgroups" href="/productgroups">Product Groups</a>
                     <a name="signout" href="" on-tap="signOut">Sign out</a>
                 </iron-selector>
+
             </app-drawer>
 
             <!-- Main content -->
@@ -200,6 +201,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             },
 
             getAllProducts: function(shoppinglistChange,allproductsChange,allproductgroupsChange){
+                //console.log('get all products')
+                //console.log(shoppinglistChange)
+                //console.log(allproductsChange)
+                //console.log(allproductgroupsChange)
+
                 var shoppinglist = this.shoppinglist;
                 var allproducts = this.products;
                 var allproductgroups = this.productgroups;
