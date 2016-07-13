@@ -64,7 +64,6 @@
             <paper-material class="product horizontal layout center wrap" on-tap="addItemToShoppinglist" key="[[product.key]]">
                 <div class="name flex">{{product.val.name}}</div>
                 <div class="store flex">{{product.val.store}}</div>
-                <div class="flex">{{product.val.order}}</div>
                 <paper-icon-button icon="create" raised on-tap="editItem">Edit</paper-icon-button>
             </paper-material>
         </template>
@@ -91,7 +90,6 @@
                 <paper-input label="Package quantity" value="{{tempItem.packagequantity}}"></paper-input>
                 <paper-input label="Store" value="{{tempItem.store}}"></paper-input>
                 <paper-input label="Price" value="{{tempItem.price}}"></paper-input>
-                <paper-input label="Order" value="{{tempItem.order}}"></paper-input>
 
                 <div class="buttons">
                     <paper-button raised dialog-dismiss>Cancel</paper-button>
@@ -286,8 +284,8 @@
             },
 
             _sortByName: function(a,b){
-                var a_order = parseFloat(this._getObjectListProperty(this.products,a.key,'order'));
-                var b_order = parseFloat(this._getObjectListProperty(this.products,b.key,'order'));
+                var a_order = this._getObjectListProperty(this.products,a.key,'name');
+                var b_order = this._getObjectListProperty(this.products,b.key,'name');
 
                 if(a_order>b_order){
                     return 1;

@@ -24,9 +24,6 @@
                 display: block;
                 padding: 10px;
             }
-            .shoppinglist{
-                margin-bottom: 10px;
-            }
             .product{
                 background-color: #ffffff;
             }
@@ -52,22 +49,19 @@
         </style>
         
         
-        <paper-material class="shoppinglist">
-            <h1>Shopping list</h1>
+        <h1>Shopping list</h1>
 
-            <sortable-js on-update="_updateOrder" manually-handle-update-events>
-                <template id="shoppinglistproductsdomrepeat" is="dom-repeat" items="{{_toOrderedArray(shoppinglistproducts)}}" as="product">
-                    <paper-material class="product horizontal layout center">
-                        <paper-checkbox></paper-checkbox>
-                        <div class="name flex">{{_getObjectListProperty(products,product.key,'name')}}</div>
-                        <div class="quantity">{{_round(product.val.quantity,2)}}</div>
-                        <div class="unit">{{_getObjectListProperty(products,product.key,'unit')}}</div>
-                        <div class="flex">{{_getObjectListProperty(products,product.key,'order')}}</div>
-                    </paper-material>
-                </template>
-            </sortable-js>
+        <sortable-js on-update="_updateOrder" manually-handle-update-events>
+            <template id="shoppinglistproductsdomrepeat" is="dom-repeat" items="{{getOrderedShoppinglist(shoppinglistproducts)}}" as="product">
+                <paper-material class="product horizontal layout center">
+                    <paper-checkbox></paper-checkbox>
+                    <div class="name flex">{{_getObjectListProperty(products,product.key,'name')}}</div>
+                    <div class="quantity">{{_round(product.val.quantity,2)}}</div>
+                    <div class="unit">{{_getObjectListProperty(products,product.key,'unit')}}</div>
+                </paper-material>
+            </template>
+        </sortable-js>
 
-        </paper-material>
 
         <div class="horizontal layout">
             <div class="flex">&nbsp;</div>
@@ -161,22 +155,7 @@
                 return rounded;
             },
 
-            _toArray: function(obj){
-                if(typeof obj != 'undefined' && obj !== null){
-                    var array = Object.keys(obj).map(function(key){
-                        if(obj[key] != null){
-                            return {key:key, val:obj[key]};
-                        }
-                    });
-                    // remove undefined elements
-                    array = array.filter(function( val ) {
-                       return val !== undefined;
-                    });
-                    return array;
-                }
-            },
-
-            _toOrderedArray: function(obj){
+            getOrderedShoppinglist: function(obj){
                 var that = this;
                 var array = that._toArray(obj);
                 array.sort(function(a,b){
@@ -194,6 +173,21 @@
                     }
                 });
                 return array;
+            },
+
+            _toArray: function(obj){
+                if(typeof obj != 'undefined' && obj !== null){
+                    var array = Object.keys(obj).map(function(key){
+                        if(obj[key] != null){
+                            return {key:key, val:obj[key]};
+                        }
+                    });
+                    // remove undefined elements
+                    array = array.filter(function( val ) {
+                       return val !== undefined;
+                    });
+                    return array;
+                }
             },
 
             _updateOrder: function(e){
@@ -266,21 +260,6 @@
                     //this.products = JSON.parse(JSON.stringify(this.products));
                 }
             
-            },
-
-            _sortByOrder: function(a,b){
-                a_order = parseFloat(this._getObjectListProperty(this.products,a.key,'order'));
-                b_order = parseFloat(this._getObjectListProperty(this.products,b.key,'order'));
-
-                if(a_order>b_order){
-                    return 1;
-                }
-                else if(a_order<b_order){
-                    return -1;
-                }
-                else{
-                    return 0;
-                }
             },
 
         });
