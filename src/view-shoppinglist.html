@@ -103,7 +103,6 @@
                     notify: true
                 },
             },
-
             clearShoppinglistDialog: function(){
                 this.$.clearShoppinglistDialog.open();
             },
@@ -191,7 +190,7 @@
             },
 
             _updateOrder: function(e){
-                if(typeof e.oldIndex != 'undefined' && typeof e.newIndex != 'undefined' && typeof e.item.dataHost.__data__ != 'undefined'){
+                if(typeof e.oldIndex != 'undefined' && typeof e.newIndex != 'undefined' && e.oldIndex != e.newIndex && typeof e.item.dataHost.__data__ != 'undefined'){
 
                     var that = this;
 

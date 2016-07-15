@@ -87,20 +87,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <firebase-app name="shoppinglist" auth-domain="shoppinglist-c18fc.firebaseapp.com" database-url="https://shoppinglist-c18fc.firebaseio.com" api-key="AIzaSyDKIknBiXaobbcuNLJ90x2MT7mmEFmmoOA"></firebase-app>
         <firebase-auth id="auth" app-name="shoppinglist" provider="google" user="{{user}}" signed-in="{{signedIn}}"></firebase-auth>
 
+        <template is="dom-if" if="{{signedIn}}">
+            <firebase-document app-name="shoppinglist" path="/[[user.uid]]/products" data="{{productsFirebase}}"></firebase-document>
+            <app-indexeddb-mirror key="products" data="{{productsFirebase}}" persisted-data="{{products}}"></app-indexeddb-mirror>
 
-        <firebase-document app-name="shoppinglist" path="/[[user.uid]]/products" data="{{productsFirebase}}"></firebase-document>
-        <app-indexeddb-mirror key="products" data="{{productsFirebase}}" persisted-data="{{products}}"></app-indexeddb-mirror>
 
+            <firebase-document app-name="shoppinglist" path="/[[user.uid]]/productgroups" data="{{productgroups}}"></firebase-document>
+            <!--<app-indexeddb-mirror key="productgroups" data="{{productgroupsFirebase}}" persisted-data="{{productgroups}}"></app-indexeddb-mirror>-->
 
-        <firebase-document app-name="shoppinglist" path="/[[user.uid]]/productgroups" data="{{productgroupsFirebase}}"></firebase-document>
-        <app-indexeddb-mirror key="productgroups" data="{{productgroupsFirebase}}" persisted-data="{{productgroups}}"></app-indexeddb-mirror>
+            <firebase-document app-name="shoppinglist" path="/[[user.uid]]/shoppinglist" data="{{shoppinglist}}"></firebase-document>
+            <!--<app-indexeddb-mirror key="shoppinglist" data="{{shoppinglistFirebase}}" persisted-data="{{shoppinglist}}"></app-indexeddb-mirror>-->
 
-        <firebase-document app-name="shoppinglist" path="/[[user.uid]]/shoppinglist" data="{{shoppinglistFirebase}}"></firebase-document>
-        <app-indexeddb-mirror key="shoppinglist" data="{{shoppinglistFirebase}}" persisted-data="{{shoppinglist}}"></app-indexeddb-mirror>
-
-        <firebase-document app-name="shoppinglist" path="/[[user.uid]]/shoppinglistproducts" data="{{shoppinglistproducts}}"></firebase-document>
-        <!--<app-indexeddb-mirror key="shoppinglistproducts" data="{{shoppinglistproductsFirebase}}" persisted-data="{{shoppinglistproducts}}"></app-indexeddb-mirror>-->
-
+            <firebase-document app-name="shoppinglist" path="/[[user.uid]]/shoppinglistproducts" data="{{shoppinglistproducts}}"></firebase-document>
+            <!--<app-indexeddb-mirror key="shoppinglistproducts" data="{{shoppinglistproductsFirebase}}" persisted-data="{{shoppinglistproducts}}"></app-indexeddb-mirror>-->
+        </template>
 
      
         <app-drawer-layout id="app" fullbleed>
