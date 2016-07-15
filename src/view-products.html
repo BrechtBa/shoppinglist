@@ -249,13 +249,13 @@
                 };
             },
 
-            _productsChanged(change){
+            _productsChanged: function(change){
                 if(typeof this.tempKey != 'undefined' && typeof this.products[this.tempKey] != 'undefined'){
                     this.tempItem = JSON.parse(JSON.stringify(this.products[this.tempKey]));
                 }
             },
 
-            _routeKeyChanged(key){
+            _routeKeyChanged: function(key){
                 if(typeof key=='undefined' || key==''){
                     this.$.productDetail.close()
                 }

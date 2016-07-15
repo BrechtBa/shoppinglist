@@ -323,13 +323,13 @@
                   };
             },
 
-            _productgroupsChanged(change){
+            _productgroupsChanged: function(change){
                 if(typeof this.tempKey != 'undefined' && typeof this.productgroups[this.tempKey] != 'undefined'){
                     this.tempItem = JSON.parse(JSON.stringify(this.productgroups[this.tempKey]));
                 }
             },
 
-            _routeKeyChanged(key){
+            _routeKeyChanged: function(key){
                 if(typeof key=='undefined' || key==''){
                     this.$.productgroupDetail.close();
                 }

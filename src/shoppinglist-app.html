@@ -181,7 +181,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 this.productgroups = [];
             },
 
-            handleDeleteProduct(e,key){
+            handleDeleteProduct: function(e,key){
 
                 if(typeof this.shoppinglist.products != 'undefined' && typeof this.shoppinglist.products[key] != 'undefined'){
                     this.set('shoppinglist.products.'+key,null);
