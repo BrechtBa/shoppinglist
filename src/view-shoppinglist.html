@@ -24,6 +24,13 @@
                 display: block;
                 padding: 10px;
             }
+            a{
+                text-decoration: none;
+                color: var(--app-secondary-color);
+            }
+            .controls{
+                margin-bottom: 10px;
+            }
             .product{
                 background-color: #ffffff;
             }
@@ -49,7 +56,12 @@
         </style>
         
         
-        <h1>Shopping list</h1>
+        <div class="horizontal layout controls">
+            <a href="/products"><paper-button raised>Products</paper-button></a>
+            <a href="/productgroups"><paper-button raised>Groups</paper-button></a>
+            <div class="flex">&nbsp;</div>
+            <paper-button raised on-tap="editShoppinglist">Edit</paper-button>
+        </div>
 
         <sortable-js on-update="_updateOrder" manually-handle-update-events>
             <template id="shoppinglistproductsdomrepeat" is="dom-repeat" items="{{getOrderedShoppinglist(shoppinglistproducts)}}" as="product">

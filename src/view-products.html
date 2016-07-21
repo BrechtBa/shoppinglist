@@ -69,48 +69,6 @@
         </template>
 
 
-
-
-        <paper-dialog id="productDetail" on-iron-overlay-closed="_showList">
-            <paper-dialog-scrollable>
-                <h3>Product Details</h3>
-
-                <paper-input label="Name" value="{{tempItem.name}}"></paper-input>
-                <div class="horizontal layout">
-                    <div>
-                        <paper-input label="Unit" value="{{tempItem.unit}}"></paper-input>
-                    </div>
-                    <div>&nbsp;</div>
-                    <div>
-                        <paper-input label="Second unit" value="{{tempItem.secondunit}}"></paper-input>
-                        <paper-input label="Unit conversion" value="{{tempItem.unitconversion}}"></paper-input>
-                    </div>
-                </div>
-
-                <paper-input label="Package quantity" value="{{tempItem.packagequantity}}"></paper-input>
-                <paper-input label="Store" value="{{tempItem.store}}"></paper-input>
-                <paper-input label="Price" value="{{tempItem.price}}"></paper-input>
-
-                <div class="buttons">
-                    <paper-button raised dialog-dismiss>Cancel</paper-button>
-                    <paper-button raised dialog-confirm on-tap="saveItem">Save</paper-button>
-                    <paper-button raised on-tap="deleteItemDialog">Delete</paper-button>
-                </div>
-            </paper-dialog-scrollable>
-        </paper-dialog>
-
-
-
-        <paper-dialog id="deleteItemDialog">
-            <h2>Are you sure?</h2>
-            <div class="buttons">
-                <paper-button dialog-dismiss>Cancel</paper-button>
-                <paper-button dialog-confirm on-tap="deleteItem">Delete</paper-button>
-            </div>
-        </paper-dialog>
-
-
-
         <paper-dialog id="shoppinglistDialog" vertical-align="top" horizontal-align="right">
             <paper-button class="close" on-tap="hideShoppinglist">close</paper-button>
             <paper-dialog-scrollable>
@@ -147,39 +105,14 @@
                 }
             },
 
-            observers: [
-                '_routeKeyChanged(routeData.key)',
-                '_productsChanged(products.*)'
-            ],
-
-
-            itemlist: function(object){
-                return Object.keys(object).map(function(key) {return object[key]});
-            },
-
             newItem: function(){
-                this.set('route.path','/-1');
+                this.set('route.path','/new');
             },
 
             editItem: function(e){
                 e.stopPropagation();
                 var key = e.model.__data__.product.key;
                 this.set('route.path','/'+key);
-            },
-
-            saveItem: function(e){
-                this.set('products.'+this.tempKey,this.tempItem);
-            },
-
-            deleteItemDialog: function(e){
-                e.stopPropagation();
-                this.$.deleteItemDialog.open();
-            },
-
-            deleteItem: function(e){
-                // fire an to delete the product
-                this.fire('delete-product',this.tempKey);
-                this._showList();
             },
 
             addItemToShoppinglist: function(e){
@@ -235,11 +168,6 @@
                 }
             },
 
-            _showList: function(e){
-                this.set('route.path','');
-                this.set('routeData.key','');
-            },
-
             _computeFilter: function(string){
 
                 string = string.toLowerCase();
@@ -247,40 +175,6 @@
                     var name = item.val.name.toLowerCase();
                     return (name.indexOf(string) != -1 );
                 };
-            },
-
-            _productsChanged: function(change){
-                if(typeof this.tempKey != 'undefined' && typeof this.products[this.tempKey] != 'undefined'){
-                    this.tempItem = JSON.parse(JSON.stringify(this.products[this.tempKey]));
-                }
-            },
-
-            _routeKeyChanged: function(key){
-                if(typeof key=='undefined' || key==''){
-                    this.$.productDetail.close()
-                }
-                else{
-                    if(key=='-1'){
-                        this.tempKey = btoa(this.user.uid + Date.now());
-                        this.tempItem = {
-                            'name':'newproduct',
-                            'unit':'',
-                            'secondunit':'',
-                            'unitconversion':1,
-                            'packagequantity':1,
-                            'price':0,
-                            'store':'',
-                            'order': Object.keys(this.products).length
-                        };
-                    }
-                    else{
-                        this.tempKey = key;
-                        if(typeof this.products[key] != 'undefined'){
-                            this.tempItem = JSON.parse(JSON.stringify(this.products[key]));
-                        }
-                    }
-                    this.$.productDetail.open();
-                }
             },
 
             _sortByName: function(a,b){
